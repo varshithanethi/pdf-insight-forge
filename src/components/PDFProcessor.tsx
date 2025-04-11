@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
-import { FileText, FilePieChart, ListChecks, Presentation, Loader2 } from 'lucide-react';
+import { FileText, FilePieChart, ListChecks, Presentation, Loader2, CheckCircle2 } from 'lucide-react';
 import { usePDF } from '@/contexts/PDFContext';
 import { generateSummary, extractKeyPoints, generateSlides } from '@/utils/pdfUtils';
 import { toast } from 'sonner';
@@ -95,23 +95,23 @@ const PDFProcessor: React.FC = () => {
   };
   
   return (
-    <Card className="h-full">
-      <CardHeader>
-        <CardTitle>PDF Insights</CardTitle>
+    <Card className="h-full border-none shadow-lg bg-gradient-to-br from-card to-secondary/30 backdrop-blur-sm">
+      <CardHeader className="border-b border-border/40">
+        <CardTitle className="text-gradient font-bold">PDF Insights</CardTitle>
       </CardHeader>
       
-      <CardContent className="overflow-auto h-full">
+      <CardContent className="overflow-auto h-full pt-6">
         <Tabs defaultValue="summary" className="w-full">
-          <TabsList className="grid grid-cols-3 mb-4">
-            <TabsTrigger value="summary" disabled={isLoading}>
+          <TabsList className="grid grid-cols-3 mb-6 bg-background/50 p-1">
+            <TabsTrigger value="summary" disabled={isLoading} className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <FileText className="mr-2 h-4 w-4" />
               Summary
             </TabsTrigger>
-            <TabsTrigger value="keypoints" disabled={isLoading}>
+            <TabsTrigger value="keypoints" disabled={isLoading} className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <ListChecks className="mr-2 h-4 w-4" />
               Key Points
             </TabsTrigger>
-            <TabsTrigger value="slides" disabled={isLoading}>
+            <TabsTrigger value="slides" disabled={isLoading} className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Presentation className="mr-2 h-4 w-4" />
               Slides
             </TabsTrigger>
@@ -137,7 +137,7 @@ const PDFProcessor: React.FC = () => {
             
             <Button
               onClick={handleGenerateSummary}
-              className="w-full bg-gradient-to-r from-primary to-accent"
+              className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
               disabled={!pdfText || isLoading}
             >
               {isLoading ? (
@@ -154,8 +154,8 @@ const PDFProcessor: React.FC = () => {
             </Button>
             
             {pdfSummary && (
-              <div className="mt-4 p-4 bg-secondary rounded-md">
-                <h3 className="font-semibold mb-2">Document Summary</h3>
+              <div className="mt-6 p-6 bg-secondary/50 backdrop-blur-sm rounded-md border border-border/50 animate-fade-in">
+                <h3 className="font-semibold mb-4 text-lg">Document Summary</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{pdfSummary}</p>
               </div>
             )}
@@ -181,7 +181,7 @@ const PDFProcessor: React.FC = () => {
             
             <Button
               onClick={handleExtractKeyPoints}
-              className="w-full bg-gradient-to-r from-primary to-accent"
+              className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
               disabled={!pdfText || isLoading}
             >
               {isLoading ? (
@@ -198,12 +198,13 @@ const PDFProcessor: React.FC = () => {
             </Button>
             
             {pdfKeyPoints.length > 0 && (
-              <div className="mt-4 p-4 bg-secondary rounded-md">
-                <h3 className="font-semibold mb-2">Key Points</h3>
-                <ul className="list-disc pl-5 space-y-2">
+              <div className="mt-6 p-6 bg-secondary/50 backdrop-blur-sm rounded-md border border-border/50 animate-fade-in">
+                <h3 className="font-semibold mb-4 text-lg">Key Points</h3>
+                <ul className="space-y-3">
                   {pdfKeyPoints.map((point, index) => (
-                    <li key={index} className="text-sm text-muted-foreground">
-                      {point}
+                    <li key={index} className="flex items-start text-sm text-muted-foreground">
+                      <CheckCircle2 className="h-5 w-5 mr-3 text-accent flex-shrink-0 mt-0.5" />
+                      <span className="leading-relaxed">{point}</span>
                     </li>
                   ))}
                 </ul>
@@ -231,7 +232,7 @@ const PDFProcessor: React.FC = () => {
             
             <Button
               onClick={handleGenerateSlides}
-              className="w-full bg-gradient-to-r from-primary to-accent"
+              className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
               disabled={!pdfText || isLoading}
             >
               {isLoading ? (
@@ -248,17 +249,17 @@ const PDFProcessor: React.FC = () => {
             </Button>
             
             {pdfSlides.length > 0 && (
-              <div className="mt-4 space-y-6">
+              <div className="mt-6 space-y-6 animate-fade-in">
                 {pdfSlides.map((slide, index) => (
-                  <Card key={index} className="overflow-hidden">
+                  <Card key={index} className="overflow-hidden bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/10 shadow-md">
                     <CardContent className="p-6">
                       <div className="prose prose-sm max-w-none">
-                        <div className="font-bold text-lg mb-2">
+                        <div className="font-bold text-lg mb-2 text-primary">
                           Slide {index + 1}
                         </div>
                         <div className="whitespace-pre-line text-sm">
                           {slide.split('\n').map((line, i) => (
-                            <div key={i} className={line.startsWith('#') ? "text-lg font-bold mb-2" : "mb-2"}>
+                            <div key={i} className={line.startsWith('#') ? "text-lg font-bold mb-3 text-accent" : "mb-2"}>
                               {line.startsWith('#') ? line.replace(/^#\s/, '') : line}
                             </div>
                           ))}

@@ -7,9 +7,11 @@ import PDFProcessor from '@/components/PDFProcessor';
 import Header from '@/components/Header';
 import StatusBar from '@/components/StatusBar';
 import { usePDF } from '@/contexts/PDFContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AppContent: React.FC = () => {
   const { pdfFile, isPdfVisible } = usePDF();
+  const { isAuthenticated } = useAuth();
   
   return (
     <div className="flex flex-col h-screen">
@@ -19,7 +21,7 @@ const AppContent: React.FC = () => {
         <div className="container mx-auto p-4 md:p-6 h-full">
           {!pdfFile ? (
             <div className="flex items-center justify-center h-full">
-              <div className="max-w-md w-full fade-in">
+              <div className="max-w-md w-full zoom-in">
                 <PDFUploader />
               </div>
             </div>
