@@ -1,11 +1,12 @@
 
 import React from 'react';
-import { FileText, Github, UserCircle, LogOut, LogIn, BookText, ChevronDown, Shield } from 'lucide-react';
+import { FileText, Github, UserCircle, LogOut, LogIn, BookText, ChevronDown, Shield, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const Header: React.FC = () => {
   const { isAuthenticated, user, logout, setShowAuthModal, isAdmin } = useAuth();
@@ -26,6 +27,23 @@ const Header: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-4">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" className="hidden md:flex items-center">
+                  <Code className="mr-2 h-4 w-4" />
+                  Built with React & TypeScript
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="text-xs">
+                  <p>Built with: React, TypeScript, Tailwind CSS, shadcn/ui</p>
+                  <p>PDF processing: PDF.js</p>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
           {isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

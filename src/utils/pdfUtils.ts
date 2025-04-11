@@ -1,4 +1,3 @@
-
 import * as pdfjsLib from 'pdfjs-dist';
 import { toast } from 'sonner';
 
@@ -302,4 +301,114 @@ export const getSlideIconName = (slideTitle: string): string => {
   const extractedTitle = titleMatch ? titleMatch[1] : '';
   
   return iconMap[extractedTitle] || 'FileText';
+};
+
+/**
+ * Generate images related to the PDF content
+ */
+export const generateRelatedImages = (text: string, maxImages: number = 6): { url: string; title: string; description: string }[] => {
+  if (!text) return [];
+  
+  // Extract potential topics for images
+  const topics = identifyTopics(text);
+  const images: { url: string; title: string; description: string }[] = [];
+  
+  // Placeholder image URLs from Unsplash (in a real app, we would use an AI image generation API)
+  const placeholderImageUrls = [
+    'https://source.unsplash.com/random/800x600/?document',
+    'https://source.unsplash.com/random/800x600/?business',
+    'https://source.unsplash.com/random/800x600/?data',
+    'https://source.unsplash.com/random/800x600/?chart',
+    'https://source.unsplash.com/random/800x600/?graph',
+    'https://source.unsplash.com/random/800x600/?presentation',
+    'https://source.unsplash.com/random/800x600/?research',
+    'https://source.unsplash.com/random/800x600/?analytics',
+    'https://source.unsplash.com/random/800x600/?academic',
+    'https://source.unsplash.com/random/800x600/?office',
+    'https://source.unsplash.com/random/800x600/?technology',
+    'https://source.unsplash.com/random/800x600/?science',
+    'https://source.unsplash.com/random/800x600/?education',
+    'https://source.unsplash.com/random/800x600/?finance',
+    'https://source.unsplash.com/random/800x600/?marketing'
+  ];
+  
+  // Create image entries for each topic
+  for (let i = 0; i < Math.min(topics.length, maxImages); i++) {
+    const topic = topics[i];
+    
+    // In a real application, we would generate an image based on the topic
+    // For now, we'll use placeholder images
+    const imageUrl = `https://source.unsplash.com/random/800x600/?${encodeURIComponent(topic)}`;
+    
+    // Generate a relevant description from the text
+    const relevantSentences = findRelevantSentences(text, topic, 2);
+    const description = relevantSentences.join(' ');
+    
+    images.push({
+      url: imageUrl,
+      title: capitalizeFirstLetter(topic),
+      description: description.substring(0, 200) + (description.length > 200 ? '...' : '')
+    });
+  }
+  
+  // If we don't have enough topic-based images, add some generic ones
+  while (images.length < maxImages) {
+    const index = images.length % placeholderImageUrls.length;
+    const genericTitle = ['Visual Overview', 'Document Illustration', 'Concept Visualization', 
+                          'Related Visual', 'Supporting Image', 'Content Visualization'][images.length % 6];
+    
+    // Extract a random paragraph for the description
+    const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+    const randomParagraph = paragraphs[Math.floor(Math.random() * paragraphs.length)] || '';
+    const shortDescription = randomParagraph.substring(0, 150) + (randomParagraph.length > 150 ? '...' : '');
+    
+    images.push({
+      url: placeholderImageUrls[index],
+      title: genericTitle,
+      description: shortDescription
+    });
+  }
+  
+  return images;
+};
+
+/**
+ * Find sentences in the text that are relevant to a specific topic
+ */
+const findRelevantSentences = (text: string, topic: string, maxSentences: number = 2): string[] => {
+  if (!text) return [];
+  
+  const sentences = text.match(/[^\.!\?]+[\.!\?]+/g) || [];
+  const relevantSentences: string[] = [];
+  
+  // Look for sentences that contain the topic
+  for (const sentence of sentences) {
+    if (sentence.toLowerCase().includes(topic.toLowerCase())) {
+      relevantSentences.push(sentence.trim());
+      if (relevantSentences.length >= maxSentences) break;
+    }
+  }
+  
+  // If we didn't find enough sentences, include some that might be related
+  if (relevantSentences.length < maxSentences) {
+    const topicWords = topic.toLowerCase().split(' ');
+    for (const sentence of sentences) {
+      if (!relevantSentences.includes(sentence.trim())) {
+        // Check if the sentence contains any word from the topic
+        if (topicWords.some(word => sentence.toLowerCase().includes(word))) {
+          relevantSentences.push(sentence.trim());
+          if (relevantSentences.length >= maxSentences) break;
+        }
+      }
+    }
+  }
+  
+  return relevantSentences;
+};
+
+/**
+ * Helper function to capitalize the first letter of a string
+ */
+const capitalizeFirstLetter = (string: string): string => {
+  return string.charAt(0).toUpperCase() + string.slice(1);
 };

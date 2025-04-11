@@ -1,15 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
-import { FileText, FilePieChart, ListChecks, Presentation, Loader2, CheckCircle2, Sparkles, Download, Lock, Shield } from 'lucide-react';
+import { FileText, FilePieChart, ListChecks, Presentation, Loader2, CheckCircle2, Sparkles, Download, Lock, Shield, Image as ImageIcon } from 'lucide-react';
 import { usePDF } from '@/contexts/PDFContext';
-import { generateSummary, extractKeyPoints, generateSlides } from '@/utils/pdfUtils';
+import { generateSummary, extractKeyPoints, generateSlides, generateRelatedImages } from '@/utils/pdfUtils';
 import { toast } from 'sonner';
 import SlideCard from './SlideCard';
+import ImageCard from './ImageCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
 
@@ -19,9 +19,11 @@ const PDFProcessor: React.FC = () => {
     setPdfSummary,
     setPdfKeyPoints,
     setPdfSlides,
+    setGeneratedImages,
     pdfSummary,
     pdfKeyPoints,
     pdfSlides,
+    generatedImages,
     isLoading,
     setIsLoading,
     setProcessingStep
@@ -32,11 +34,13 @@ const PDFProcessor: React.FC = () => {
   const [summaryLength, setSummaryLength] = useState<number>(500);
   const [keyPointsCount, setKeyPointsCount] = useState<number>(10);
   const [slidesCount, setSlidesCount] = useState<number>(5);
+  const [imagesCount, setImagesCount] = useState<number>(6);
   const [maxAllowedSlides, setMaxAllowedSlides] = useState<number>(10);
+  const [maxAllowedImages, setMaxAllowedImages] = useState<number>(8);
   
-  // Set maximum slides based on user role
   useEffect(() => {
     setMaxAllowedSlides(isAdmin ? 20 : 10);
+    setMaxAllowedImages(isAdmin ? 12 : 8);
   }, [isAdmin]);
   
   const handleGenerateSummary = () => {
@@ -105,6 +109,28 @@ const PDFProcessor: React.FC = () => {
     }
   };
 
+  const handleGenerateImages = () => {
+    if (!pdfText) {
+      toast.error('Please upload a PDF first');
+      return;
+    }
+    
+    setIsLoading(true);
+    setProcessingStep('Generating images...');
+    
+    try {
+      const images = generateRelatedImages(pdfText, imagesCount);
+      setGeneratedImages(images);
+      toast.success('Images generated successfully');
+    } catch (error) {
+      console.error('Error generating images:', error);
+      toast.error('Failed to generate images');
+    } finally {
+      setIsLoading(false);
+      setProcessingStep('');
+    }
+  };
+
   const handleDownload = (content: string, filename: string) => {
     if (!isAuthenticated) {
       toast.error('Please sign in to download content');
@@ -120,6 +146,22 @@ const PDFProcessor: React.FC = () => {
     element.click();
     document.body.removeChild(element);
     toast.success(`Downloaded ${filename}`);
+  };
+
+  const handleDownloadImage = (imageUrl: string, title: string) => {
+    if (!isAuthenticated) {
+      toast.error('Please sign in to download images');
+      setShowAuthModal(true);
+      return;
+    }
+    
+    const link = document.createElement('a');
+    link.href = imageUrl;
+    link.download = `${title.replace(/\s+/g, '-').toLowerCase()}.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success(`Downloading ${title} image`);
   };
   
   return (
@@ -137,7 +179,7 @@ const PDFProcessor: React.FC = () => {
       
       <CardContent className="overflow-auto h-full pt-6">
         <Tabs defaultValue="summary" className="w-full">
-          <TabsList className="grid grid-cols-3 mb-6 bg-background/50 p-1">
+          <TabsList className="grid grid-cols-4 mb-6 bg-background/50 p-1">
             <TabsTrigger value="summary" disabled={isLoading} className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <FileText className="mr-2 h-4 w-4" />
               Summary
@@ -150,9 +192,12 @@ const PDFProcessor: React.FC = () => {
               <Presentation className="mr-2 h-4 w-4" />
               Slides
             </TabsTrigger>
+            <TabsTrigger value="images" disabled={isLoading} className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <ImageIcon className="mr-2 h-4 w-4" />
+              Images
+            </TabsTrigger>
           </TabsList>
           
-          {/* Summary Tab */}
           <TabsContent value="summary" className="space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between items-center">
@@ -213,7 +258,6 @@ const PDFProcessor: React.FC = () => {
             )}
           </TabsContent>
           
-          {/* Key Points Tab */}
           <TabsContent value="keypoints" className="space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between items-center">
@@ -281,7 +325,6 @@ const PDFProcessor: React.FC = () => {
             )}
           </TabsContent>
           
-          {/* Slides Tab */}
           <TabsContent value="slides" className="space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between items-center">
@@ -348,6 +391,66 @@ const PDFProcessor: React.FC = () => {
                   ))}
                 </div>
               </>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="images" className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="text-sm font-medium">
+                  Number of Images: {imagesCount}
+                </label>
+                {isAdmin ? (
+                  <Badge variant="accent" className="text-xs flex items-center gap-1">
+                    <Shield className="h-3 w-3" /> Admin: {maxAllowedImages} images max
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-xs flex items-center gap-1">
+                    <Lock className="h-3 w-3" /> 8 images max
+                  </Badge>
+                )}
+              </div>
+              <Slider
+                value={[imagesCount]}
+                min={2}
+                max={maxAllowedImages}
+                step={1}
+                onValueChange={(value) => setImagesCount(value[0])}
+                disabled={isLoading}
+                className={isAdmin ? "accent-accent" : ""}
+              />
+            </div>
+            
+            <Button
+              onClick={handleGenerateImages}
+              className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
+              disabled={!pdfText || isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <ImageIcon className="mr-2 h-4 w-4" />
+                  Generate Images
+                </>
+              )}
+            </Button>
+            
+            {generatedImages.length > 0 && (
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+                {generatedImages.map((image, index) => (
+                  <div key={index} className="animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
+                    <ImageCard 
+                      image={image}
+                      index={index}
+                      onDownload={() => handleDownloadImage(image.url, image.title)}
+                    />
+                  </div>
+                ))}
+              </div>
             )}
           </TabsContent>
         </Tabs>

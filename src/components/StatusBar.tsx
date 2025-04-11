@@ -1,13 +1,13 @@
 
 import React from 'react';
-import { Loader2, User, FileText, CheckCircle2, Clock, Activity, Shield } from 'lucide-react';
+import { Loader2, User, FileText, CheckCircle2, Clock, Activity, Shield, Image } from 'lucide-react';
 import { usePDF } from '@/contexts/PDFContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 
 const StatusBar: React.FC = () => {
-  const { isLoading, processingStep, pdfFile } = usePDF();
+  const { isLoading, processingStep, pdfFile, generatedImages } = usePDF();
   const { isAuthenticated, user } = useAuth();
   
   return (
@@ -28,6 +28,12 @@ const StatusBar: React.FC = () => {
                 <span className="ml-2 text-xs text-muted-foreground">
                   ({Math.round(pdfFile.size / 1024)} KB)
                 </span>
+                {generatedImages.length > 0 && (
+                  <Badge variant="outline" className="ml-3 text-xs flex items-center">
+                    <Image className="h-3 w-3 mr-1" />
+                    {generatedImages.length} images
+                  </Badge>
+                )}
               </div>
             ) : (
               <div className="flex items-center">

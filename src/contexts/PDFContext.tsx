@@ -7,6 +7,7 @@ interface PDFContextType {
   pdfSummary: string;
   pdfKeyPoints: string[];
   pdfSlides: string[];
+  generatedImages: { url: string; title: string; description: string }[];
   isLoading: boolean;
   processingStep: string;
   isPdfVisible: boolean;
@@ -15,6 +16,7 @@ interface PDFContextType {
   setPdfSummary: (summary: string) => void;
   setPdfKeyPoints: (keyPoints: string[]) => void;
   setPdfSlides: (slides: string[]) => void;
+  setGeneratedImages: (images: { url: string; title: string; description: string }[]) => void;
   setIsLoading: (isLoading: boolean) => void;
   setProcessingStep: (step: string) => void;
   setIsPdfVisible: (isVisible: boolean) => void;
@@ -28,6 +30,7 @@ export const PDFProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [pdfSummary, setPdfSummary] = useState<string>('');
   const [pdfKeyPoints, setPdfKeyPoints] = useState<string[]>([]);
   const [pdfSlides, setPdfSlides] = useState<string[]>([]);
+  const [generatedImages, setGeneratedImages] = useState<{ url: string; title: string; description: string }[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [processingStep, setProcessingStep] = useState<string>('');
   const [isPdfVisible, setIsPdfVisible] = useState<boolean>(true);
@@ -40,6 +43,7 @@ export const PDFProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         pdfSummary,
         pdfKeyPoints,
         pdfSlides,
+        generatedImages,
         isLoading,
         processingStep,
         isPdfVisible,
@@ -48,6 +52,7 @@ export const PDFProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setPdfSummary,
         setPdfKeyPoints,
         setPdfSlides,
+        setGeneratedImages,
         setIsLoading,
         setProcessingStep,
         setIsPdfVisible
