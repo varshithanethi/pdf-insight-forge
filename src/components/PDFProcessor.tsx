@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
-import { FileText, FilePieChart, ListChecks, Presentation, Loader2, CheckCircle2 } from 'lucide-react';
+import { FileText, FilePieChart, ListChecks, Presentation, Loader2, CheckCircle2, Sparkles, Download } from 'lucide-react';
 import { usePDF } from '@/contexts/PDFContext';
 import { generateSummary, extractKeyPoints, generateSlides } from '@/utils/pdfUtils';
 import { toast } from 'sonner';
+import SlideCard from './SlideCard';
+import { useAuth } from '@/contexts/AuthContext';
 
 const PDFProcessor: React.FC = () => {
   const {
@@ -23,6 +25,8 @@ const PDFProcessor: React.FC = () => {
     setIsLoading,
     setProcessingStep
   } = usePDF();
+  
+  const { isAuthenticated, setShowAuthModal } = useAuth();
   
   const [summaryLength, setSummaryLength] = useState<number>(500);
   const [keyPointsCount, setKeyPointsCount] = useState<number>(10);
@@ -93,6 +97,23 @@ const PDFProcessor: React.FC = () => {
       setProcessingStep('');
     }
   };
+
+  const handleDownload = (content: string, filename: string) => {
+    if (!isAuthenticated) {
+      toast.error('Please sign in to download content');
+      setShowAuthModal(true);
+      return;
+    }
+    
+    const element = document.createElement('a');
+    const file = new Blob([content], {type: 'text/plain'});
+    element.href = URL.createObjectURL(file);
+    element.download = filename;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    toast.success(`Downloaded ${filename}`);
+  };
   
   return (
     <Card className="h-full border-none shadow-lg bg-gradient-to-br from-card to-secondary/30 backdrop-blur-sm">
@@ -147,14 +168,25 @@ const PDFProcessor: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <FileText className="mr-2 h-4 w-4" />
+                  <Sparkles className="mr-2 h-4 w-4" />
                   Generate Summary
                 </>
               )}
             </Button>
             
             {pdfSummary && (
-              <div className="mt-6 p-6 bg-secondary/50 backdrop-blur-sm rounded-md border border-border/50 animate-fade-in">
+              <div className="mt-6 p-6 bg-secondary/50 backdrop-blur-sm rounded-md border border-border/50 animate-fade-in relative">
+                <div className="absolute right-2 top-2">
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={() => handleDownload(pdfSummary, 'pdf-summary.txt')}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Download className="h-4 w-4" />
+                    <span className="sr-only">Download</span>
+                  </Button>
+                </div>
                 <h3 className="font-semibold mb-4 text-lg">Document Summary</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{pdfSummary}</p>
               </div>
@@ -198,11 +230,22 @@ const PDFProcessor: React.FC = () => {
             </Button>
             
             {pdfKeyPoints.length > 0 && (
-              <div className="mt-6 p-6 bg-secondary/50 backdrop-blur-sm rounded-md border border-border/50 animate-fade-in">
+              <div className="mt-6 p-6 bg-secondary/50 backdrop-blur-sm rounded-md border border-border/50 animate-fade-in relative">
+                <div className="absolute right-2 top-2">
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={() => handleDownload(pdfKeyPoints.join("\n\n"), 'pdf-key-points.txt')}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Download className="h-4 w-4" />
+                    <span className="sr-only">Download</span>
+                  </Button>
+                </div>
                 <h3 className="font-semibold mb-4 text-lg">Key Points</h3>
                 <ul className="space-y-3">
                   {pdfKeyPoints.map((point, index) => (
-                    <li key={index} className="flex items-start text-sm text-muted-foreground">
+                    <li key={index} className="flex items-start text-sm text-muted-foreground animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
                       <CheckCircle2 className="h-5 w-5 mr-3 text-accent flex-shrink-0 mt-0.5" />
                       <span className="leading-relaxed">{point}</span>
                     </li>
@@ -249,26 +292,26 @@ const PDFProcessor: React.FC = () => {
             </Button>
             
             {pdfSlides.length > 0 && (
-              <div className="mt-6 space-y-6 animate-fade-in">
-                {pdfSlides.map((slide, index) => (
-                  <Card key={index} className="overflow-hidden bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/10 shadow-md">
-                    <CardContent className="p-6">
-                      <div className="prose prose-sm max-w-none">
-                        <div className="font-bold text-lg mb-2 text-primary">
-                          Slide {index + 1}
-                        </div>
-                        <div className="whitespace-pre-line text-sm">
-                          {slide.split('\n').map((line, i) => (
-                            <div key={i} className={line.startsWith('#') ? "text-lg font-bold mb-3 text-accent" : "mb-2"}>
-                              {line.startsWith('#') ? line.replace(/^#\s/, '') : line}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <>
+                <div className="flex justify-end mt-4">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleDownload(pdfSlides.join("\n\n---\n\n"), 'pdf-slides.md')}
+                    className="text-xs"
+                  >
+                    <Download className="mr-2 h-3 w-3" />
+                    Download All Slides
+                  </Button>
+                </div>
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
+                  {pdfSlides.map((slide, index) => (
+                    <div key={index} className="animate-fade-in" style={{ animationDelay: `${index * 150}ms` }}>
+                      <SlideCard slideContent={slide} index={index} />
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </TabsContent>
         </Tabs>
