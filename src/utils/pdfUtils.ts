@@ -121,7 +121,17 @@ export const generateSlides = (text: string, maxSlides: number = 5): string[] =>
     { title: 'Context', template: (content: string) => `# Context\n\n${content}\n\n• Background information\n• Relevant history` },
     { title: 'Applications', template: (content: string) => `# Applications\n\n${content}\n\n• Practical uses\n• Implementations` },
     { title: 'Recommendations', template: (content: string) => `# Recommendations\n\n${content}\n\n• Suggested actions\n• Best practices` },
-    { title: 'Conclusion', template: (content: string) => `# Conclusion\n\n${content}\n\n• Summary of main points\n• Final thoughts` }
+    { title: 'Conclusion', template: (content: string) => `# Conclusion\n\n${content}\n\n• Summary of main points\n• Final thoughts` },
+    { title: 'Executive Summary', template: (content: string) => `# Executive Summary\n\n${content}\n\n• Overview for decision makers\n• Key takeaways` },
+    { title: 'Research Findings', template: (content: string) => `# Research Findings\n\n${content}\n\n• Discoveries\n• Evidence-based conclusions` },
+    { title: 'Market Analysis', template: (content: string) => `# Market Analysis\n\n${content}\n\n• Industry trends\n• Competitive landscape` },
+    { title: 'Future Directions', template: (content: string) => `# Future Directions\n\n${content}\n\n• Next steps\n• Long-term vision` },
+    { title: 'Methodology', template: (content: string) => `# Methodology\n\n${content}\n\n• Approach used\n• Techniques applied` },
+    { title: 'Case Studies', template: (content: string) => `# Case Studies\n\n${content}\n\n• Real-world examples\n• Practical applications` },
+    { title: 'Technical Details', template: (content: string) => `# Technical Details\n\n${content}\n\n• Specifications\n• Implementation notes` },
+    { title: 'Risk Assessment', template: (content: string) => `# Risk Assessment\n\n${content}\n\n• Potential challenges\n• Mitigation strategies` },
+    { title: 'Q&A', template: (content: string) => `# Q&A\n\n${content}\n\n• Common questions\n• Clarifications` },
+    { title: 'References', template: (content: string) => `# References\n\n${content}\n\n• Sources cited\n• Further reading` }
   ];
   
   // Create initial slide
@@ -171,6 +181,19 @@ export const generateSlides = (text: string, maxSlides: number = 5): string[] =>
     slides.push(slideTypes[9].template(paragraphs[paragraphs.length - 1].substring(0, 150)));
   }
   
+  // Enhance slide generation with more topic-focused slides
+  const topics = identifyTopics(text);
+  for (const topic of topics) {
+    if (slides.length >= maxSlides) break;
+    
+    // Find paragraphs related to this topic
+    const relatedContent = paragraphs.find(p => p.toLowerCase().includes(topic.toLowerCase()));
+    if (relatedContent) {
+      const slideType = slideTypes[slides.length % slideTypes.length];
+      slides.push(slideType.template(relatedContent.substring(0, 150)));
+    }
+  }
+  
   // Fill any remaining slide slots
   while (slides.length < maxSlides && paragraphs.length > slides.length) {
     const index = slides.length % paragraphs.length;
@@ -180,6 +203,42 @@ export const generateSlides = (text: string, maxSlides: number = 5): string[] =>
   }
   
   return slides;
+};
+
+/**
+ * Identify potential topics in the text
+ */
+const identifyTopics = (text: string): string[] => {
+  if (!text) return [];
+  
+  const commonTopics = [
+    'introduction', 'background', 'methodology', 'results', 'discussion', 
+    'conclusion', 'recommendations', 'analysis', 'overview', 'summary',
+    'research', 'findings', 'data', 'market', 'industry', 'trends',
+    'challenges', 'solutions', 'implementation', 'strategy', 'future',
+    'case study', 'examples', 'applications', 'benefits', 'risks',
+    'technology', 'innovation', 'development', 'process', 'system',
+    'management', 'performance', 'evaluation', 'assessment', 'review'
+  ];
+  
+  const foundTopics: string[] = [];
+  
+  // Look for common topic words
+  for (const topic of commonTopics) {
+    if (text.toLowerCase().includes(topic)) {
+      foundTopics.push(topic);
+    }
+  }
+  
+  // Look for capitalized phrases that might be section titles
+  const potentialHeadings = text.match(/[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3}/g) || [];
+  for (const heading of potentialHeadings) {
+    if (heading.length > 5 && !foundTopics.includes(heading)) {
+      foundTopics.push(heading);
+    }
+  }
+  
+  return foundTopics.slice(0, 10); // Limit to 10 topics
 };
 
 /**
@@ -226,7 +285,17 @@ export const getSlideIconName = (slideTitle: string): string => {
     'Context': 'Map',
     'Applications': 'Lightbulb',
     'Recommendations': 'CheckCircle',
-    'Conclusion': 'Flag'
+    'Conclusion': 'Flag',
+    'Executive Summary': 'FileText',
+    'Research Findings': 'FileSearch',
+    'Market Analysis': 'TrendingUp',
+    'Future Directions': 'Compass',
+    'Methodology': 'Microscope',
+    'Case Studies': 'Layers',
+    'Technical Details': 'Code',
+    'Risk Assessment': 'AlertTriangle',
+    'Q&A': 'HelpCircle',
+    'References': 'Bookmark'
   };
   
   const titleMatch = slideTitle.match(/^# ([^\\n]+)/);

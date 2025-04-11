@@ -5,22 +5,25 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface User {
   id: string;
   name: string;
   email: string;
   avatar?: string;
-  role?: string;
+  role: "Admin" | "User";
 }
 
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
-  login: (email?: string, name?: string) => void;
+  login: (email?: string, name?: string, role?: "Admin" | "User") => void;
   logout: () => void;
   showAuthModal: boolean;
   setShowAuthModal: (show: boolean) => void;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,20 +48,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, []);
 
-  const login = (email?: string, name?: string) => {
+  const login = (email?: string, name?: string, role: "Admin" | "User" = "User") => {
     // Create a more personalized user object
     const mockUser = {
       id: `user-${Math.random().toString(36).substring(2, 9)}`,
       name: name || 'Demo User',
       email: email || 'demo@example.com',
       avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'Demo User')}&background=6E59A5&color=fff`,
-      role: 'Free User'
+      role: role
     };
     
     setUser(mockUser);
     setIsAuthenticated(true);
     localStorage.setItem('pdf-insight-user', JSON.stringify(mockUser));
-    toast.success('Signed in successfully');
+    toast.success(`Signed in as ${role}`);
     setShowAuthModal(false);
   };
 
@@ -69,6 +72,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     toast.success('Signed out successfully');
   };
 
+  const isAdmin = user?.role === "Admin";
+
   return (
     <AuthContext.Provider
       value={{
@@ -77,7 +82,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         login,
         logout,
         showAuthModal,
-        setShowAuthModal
+        setShowAuthModal,
+        isAdmin
       }}
     >
       {children}
@@ -90,10 +96,11 @@ const AuthModal: React.FC = () => {
   const { showAuthModal, setShowAuthModal, login } = useAuth();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [role, setRole] = useState<"Admin" | "User">("User");
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    login(email, name);
+    login(email, name, role);
   };
 
   return (
@@ -128,6 +135,21 @@ const AuthModal: React.FC = () => {
               className="bg-background/50"
               required
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="role">Role</Label>
+            <Select 
+              value={role} 
+              onValueChange={(value: "Admin" | "User") => setRole(value)}
+            >
+              <SelectTrigger className="bg-background/50">
+                <SelectValue placeholder="Select role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="User">User</SelectItem>
+                <SelectItem value="Admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <Button 
             type="submit" 

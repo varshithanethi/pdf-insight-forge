@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { FileText, Github, UserCircle, LogOut, LogIn, BookText, ChevronDown } from 'lucide-react';
+import { FileText, Github, UserCircle, LogOut, LogIn, BookText, ChevronDown, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -8,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Badge } from '@/components/ui/badge';
 
 const Header: React.FC = () => {
-  const { isAuthenticated, user, logout, setShowAuthModal } = useAuth();
+  const { isAuthenticated, user, logout, setShowAuthModal, isAdmin } = useAuth();
   
   return (
     <header className="border-b border-border/40 bg-background/70 backdrop-blur-sm sticky top-0 z-10">
@@ -18,20 +18,31 @@ const Header: React.FC = () => {
           <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-accent">
             PDF Insight Forge
           </span>
+          {isAdmin && (
+            <Badge variant="accent" className="ml-2 animate-pulse">
+              <Shield className="h-3 w-3 mr-1" /> Admin Panel
+            </Badge>
+          )}
         </div>
         
         <div className="flex items-center gap-4">
           {isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/40 hover:bg-secondary/50 transition-colors cursor-pointer">
-                  <Avatar className="h-6 w-6 border border-accent/20">
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/40 hover:bg-secondary/50 transition-colors cursor-pointer ${isAdmin ? 'bg-accent/10' : ''}`}>
+                  <Avatar className={`h-6 w-6 border ${isAdmin ? 'border-accent' : 'border-accent/20'}`}>
                     <AvatarImage src={user?.avatar} alt={user?.name} />
                     <AvatarFallback>{user?.name?.charAt(0) || 'U'}</AvatarFallback>
                   </Avatar>
                   <span className="text-sm font-medium hidden md:block truncate max-w-[120px]">
                     {user?.name || 'User'}
                   </span>
+                  {isAdmin && (
+                    <Badge variant="accent" className="h-5 px-1.5 py-0 flex items-center text-[10px]">
+                      <Shield className="h-2.5 w-2.5 mr-1" />
+                      Admin
+                    </Badge>
+                  )}
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </div>
               </DropdownMenuTrigger>
@@ -41,6 +52,9 @@ const Header: React.FC = () => {
                     Signed in as
                   </p>
                   <p className="text-sm font-medium truncate">{user?.email}</p>
+                  <Badge variant={isAdmin ? "accent" : "secondary"} className="w-fit mt-1">
+                    {user?.role || 'User'}
+                  </Badge>
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
@@ -48,6 +62,13 @@ const Header: React.FC = () => {
                   <span>My Documents</span>
                   <Badge variant="outline" className="ml-auto text-xs">Soon</Badge>
                 </DropdownMenuItem>
+                {isAdmin && (
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                    <Shield className="h-4 w-4" />
+                    <span>Admin Dashboard</span>
+                    <Badge variant="outline" className="ml-auto text-xs">Soon</Badge>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={logout}>
                   <LogOut className="h-4 w-4" />

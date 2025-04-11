@@ -1,16 +1,17 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
-import { FileText, FilePieChart, ListChecks, Presentation, Loader2, CheckCircle2, Sparkles, Download } from 'lucide-react';
+import { FileText, FilePieChart, ListChecks, Presentation, Loader2, CheckCircle2, Sparkles, Download, Lock, Shield } from 'lucide-react';
 import { usePDF } from '@/contexts/PDFContext';
 import { generateSummary, extractKeyPoints, generateSlides } from '@/utils/pdfUtils';
 import { toast } from 'sonner';
 import SlideCard from './SlideCard';
 import { useAuth } from '@/contexts/AuthContext';
+import { Badge } from '@/components/ui/badge';
 
 const PDFProcessor: React.FC = () => {
   const {
@@ -26,11 +27,17 @@ const PDFProcessor: React.FC = () => {
     setProcessingStep
   } = usePDF();
   
-  const { isAuthenticated, setShowAuthModal } = useAuth();
+  const { isAuthenticated, setShowAuthModal, isAdmin } = useAuth();
   
   const [summaryLength, setSummaryLength] = useState<number>(500);
   const [keyPointsCount, setKeyPointsCount] = useState<number>(10);
   const [slidesCount, setSlidesCount] = useState<number>(5);
+  const [maxAllowedSlides, setMaxAllowedSlides] = useState<number>(10);
+  
+  // Set maximum slides based on user role
+  useEffect(() => {
+    setMaxAllowedSlides(isAdmin ? 20 : 10);
+  }, [isAdmin]);
   
   const handleGenerateSummary = () => {
     if (!pdfText) {
@@ -118,7 +125,14 @@ const PDFProcessor: React.FC = () => {
   return (
     <Card className="h-full border-none shadow-lg bg-gradient-to-br from-card to-secondary/30 backdrop-blur-sm">
       <CardHeader className="border-b border-border/40">
-        <CardTitle className="text-gradient font-bold">PDF Insights</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-gradient font-bold">PDF Insights</CardTitle>
+          {isAdmin && (
+            <Badge variant="accent" className="flex items-center animate-fade-in">
+              <Shield className="mr-1 h-3 w-3" /> Admin Features Enabled
+            </Badge>
+          )}
+        </div>
       </CardHeader>
       
       <CardContent className="overflow-auto h-full pt-6">
@@ -145,14 +159,20 @@ const PDFProcessor: React.FC = () => {
                 <label className="text-sm font-medium">
                   Summary Length: {summaryLength} characters
                 </label>
+                {isAdmin && (
+                  <Badge variant="outline" className="text-xs">
+                    Advanced Options
+                  </Badge>
+                )}
               </div>
               <Slider
                 value={[summaryLength]}
                 min={200}
-                max={1000}
+                max={isAdmin ? 2000 : 1000}
                 step={50}
                 onValueChange={(value) => setSummaryLength(value[0])}
                 disabled={isLoading}
+                className={isAdmin ? "accent-accent" : ""}
               />
             </div>
             
@@ -200,14 +220,20 @@ const PDFProcessor: React.FC = () => {
                 <label className="text-sm font-medium">
                   Number of Key Points: {keyPointsCount}
                 </label>
+                {isAdmin && (
+                  <Badge variant="outline" className="text-xs">
+                    Advanced Options
+                  </Badge>
+                )}
               </div>
               <Slider
                 value={[keyPointsCount]}
                 min={5}
-                max={20}
+                max={isAdmin ? 30 : 20}
                 step={1}
                 onValueChange={(value) => setKeyPointsCount(value[0])}
                 disabled={isLoading}
+                className={isAdmin ? "accent-accent" : ""}
               />
             </div>
             
@@ -262,14 +288,24 @@ const PDFProcessor: React.FC = () => {
                 <label className="text-sm font-medium">
                   Number of Slides: {slidesCount}
                 </label>
+                {isAdmin ? (
+                  <Badge variant="accent" className="text-xs flex items-center gap-1">
+                    <Shield className="h-3 w-3" /> Admin: {maxAllowedSlides} slides max
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-xs flex items-center gap-1">
+                    <Lock className="h-3 w-3" /> 10 slides max
+                  </Badge>
+                )}
               </div>
               <Slider
                 value={[slidesCount]}
                 min={3}
-                max={10}
+                max={maxAllowedSlides}
                 step={1}
                 onValueChange={(value) => setSlidesCount(value[0])}
                 disabled={isLoading}
+                className={isAdmin ? "accent-accent" : ""}
               />
             </div>
             

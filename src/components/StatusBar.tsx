@@ -1,9 +1,10 @@
 
 import React from 'react';
-import { Loader2, User, FileText, CheckCircle2, Clock, Activity } from 'lucide-react';
+import { Loader2, User, FileText, CheckCircle2, Clock, Activity, Shield } from 'lucide-react';
 import { usePDF } from '@/contexts/PDFContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 
 const StatusBar: React.FC = () => {
   const { isLoading, processingStep, pdfFile } = usePDF();
@@ -42,12 +43,22 @@ const StatusBar: React.FC = () => {
         {isAuthenticated && (
           <div className="flex items-center mr-4 px-2 py-1 rounded-full bg-primary/5 border border-primary/10">
             <User className="h-3 w-3 mr-2 text-accent" />
-            <span className="text-xs">{user?.email}</span>
+            <span className="text-xs mr-2">{user?.email}</span>
+            {user?.role === "Admin" ? (
+              <Badge variant="accent" className="h-5 px-1.5 py-0 flex items-center text-[10px]">
+                <Shield className="h-2.5 w-2.5 mr-1" />
+                Admin
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="h-5 px-1.5 py-0 flex items-center text-[10px]">
+                User
+              </Badge>
+            )}
           </div>
         )}
         <div className="flex items-center gap-2">
           <Activity className="h-3 w-3 text-accent" />
-          <span className="text-xs opacity-70">PDF Insight Forge v1.1</span>
+          <span className="text-xs opacity-70">PDF Insight Forge v1.2</span>
         </div>
       </div>
     </div>
