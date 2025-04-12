@@ -1,6 +1,11 @@
 
 import { toast } from 'sonner';
-import { generateSummary as generatePdfSummary } from '@/utils/pdfUtils';
+import { 
+  generateSummary as generatePdfSummary,
+  extractKeyPoints as extractPdfKeyPoints,
+  generateSlides as generatePdfSlides,
+  generateRelatedImages as generatePdfImages
+} from '@/utils/pdfUtils';
 
 // Mock API URLs - these would be replaced with real backend endpoints
 const API_BASE_URL = 'https://api.pdfinsightforge.com';
@@ -49,13 +54,13 @@ export const apiService = {
     try {
       console.log(`Extracting ${count} key points`);
       
+      // Use the actual text to extract key points
+      const keyPoints = extractPdfKeyPoints(pdfText, count);
+      
       // Simulate network delay
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Simulate response from server
-      return Array(count).fill(0).map((_, i) => 
-        `Key point ${i+1}: This is an important insight from the document.`
-      );
+      return keyPoints;
     } catch (error) {
       console.error('Error extracting key points:', error);
       toast.error('Failed to extract key points on the server');

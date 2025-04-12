@@ -20,6 +20,8 @@ interface PDFContextType {
   isLoading: boolean;
   processingStep: string;
   isPdfVisible: boolean;
+  darkMode: boolean;
+  sidebarOpen: boolean;
   setPdfFile: (file: File | null) => void;
   setPdfText: (text: string) => void;
   setPdfSummary: (summary: string) => void;
@@ -30,6 +32,8 @@ interface PDFContextType {
   setIsLoading: (isLoading: boolean) => void;
   setProcessingStep: (step: string) => void;
   setIsPdfVisible: (isVisible: boolean) => void;
+  setDarkMode: (darkMode: boolean) => void;
+  setSidebarOpen: (sidebarOpen: boolean) => void;
 }
 
 const PDFContext = createContext<PDFContextType | undefined>(undefined);
@@ -45,6 +49,8 @@ export const PDFProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [processingStep, setProcessingStep] = useState<string>('');
   const [isPdfVisible, setIsPdfVisible] = useState<boolean>(true);
+  const [darkMode, setDarkMode] = useState<boolean>(false);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
 
   return (
     <PDFContext.Provider
@@ -59,6 +65,8 @@ export const PDFProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         isLoading,
         processingStep,
         isPdfVisible,
+        darkMode,
+        sidebarOpen,
         setPdfFile,
         setPdfText,
         setPdfSummary,
@@ -68,7 +76,9 @@ export const PDFProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setRelatedDocuments,
         setIsLoading,
         setProcessingStep,
-        setIsPdfVisible
+        setIsPdfVisible,
+        setDarkMode,
+        setSidebarOpen
       }}
     >
       {children}

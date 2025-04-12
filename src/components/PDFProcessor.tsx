@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import RelatedDocuments from './RelatedDocuments';
 import VoiceRecognition from './VoiceRecognition';
 import { apiService } from '@/services/api';
-import { generateSlides, generateRelatedImages } from '@/utils/pdfUtils';
+import { generateSlides as generatePdfSlides, generateRelatedImages as generatePdfImages } from '@/utils/pdfUtils';
 
 const PDFProcessor: React.FC = () => {
   const {
@@ -125,7 +125,7 @@ const PDFProcessor: React.FC = () => {
     }
   };
   
-  const handleGenerateSlides = () => {
+  const handleGenerateSlides = async () => {
     if (!pdfText) {
       toast.error('Please upload a PDF first');
       return;
@@ -135,7 +135,7 @@ const PDFProcessor: React.FC = () => {
     setProcessingStep('Generating slides...');
     
     try {
-      const slides = generateSlides(pdfText, slidesCount);
+      const slides = await Promise.resolve(generatePdfSlides(pdfText, slidesCount));
       setPdfSlides(slides);
       toast.success('Slides generated successfully');
     } catch (error) {
@@ -147,7 +147,7 @@ const PDFProcessor: React.FC = () => {
     }
   };
 
-  const handleGenerateImages = () => {
+  const handleGenerateImages = async () => {
     if (!pdfText) {
       toast.error('Please upload a PDF first');
       return;
@@ -157,7 +157,7 @@ const PDFProcessor: React.FC = () => {
     setProcessingStep('Generating images...');
     
     try {
-      const images = generateRelatedImages(pdfText, imagesCount);
+      const images = await Promise.resolve(generatePdfImages(pdfText, imagesCount));
       setGeneratedImages(images);
       toast.success('Images generated successfully');
     } catch (error) {
@@ -222,18 +222,6 @@ const PDFProcessor: React.FC = () => {
     link.click();
     document.body.removeChild(link);
     toast.success(`Downloading ${title} image`);
-  };
-  
-  const generateSlides = (text: string, count: number) => {
-    return Array(count).fill(0).map((_, i) => `# Slide ${i+1}\n\n## Topic ${i+1}\n\nContent for slide ${i+1} would go here. This is automatically generated from the document's content.`);
-  };
-  
-  const generateRelatedImages = (text: string, count: number) => {
-    return Array(count).fill(0).map((_, i) => ({
-      url: `https://source.unsplash.com/random/800x600?sig=${i}`,
-      title: `Generated Image ${i+1}`,
-      description: `This is an AI-generated image related to the content of slide ${i+1}.`
-    }));
   };
   
   return (
