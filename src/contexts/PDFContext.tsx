@@ -1,6 +1,14 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
+interface RelatedDocument {
+  id: string;
+  title: string;
+  description: string;
+  similarity: number;
+  url: string;
+}
+
 interface PDFContextType {
   pdfFile: File | null;
   pdfText: string;
@@ -8,6 +16,7 @@ interface PDFContextType {
   pdfKeyPoints: string[];
   pdfSlides: string[];
   generatedImages: { url: string; title: string; description: string }[];
+  relatedDocuments: RelatedDocument[];
   isLoading: boolean;
   processingStep: string;
   isPdfVisible: boolean;
@@ -17,6 +26,7 @@ interface PDFContextType {
   setPdfKeyPoints: (keyPoints: string[]) => void;
   setPdfSlides: (slides: string[]) => void;
   setGeneratedImages: (images: { url: string; title: string; description: string }[]) => void;
+  setRelatedDocuments: (documents: RelatedDocument[]) => void;
   setIsLoading: (isLoading: boolean) => void;
   setProcessingStep: (step: string) => void;
   setIsPdfVisible: (isVisible: boolean) => void;
@@ -31,6 +41,7 @@ export const PDFProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [pdfKeyPoints, setPdfKeyPoints] = useState<string[]>([]);
   const [pdfSlides, setPdfSlides] = useState<string[]>([]);
   const [generatedImages, setGeneratedImages] = useState<{ url: string; title: string; description: string }[]>([]);
+  const [relatedDocuments, setRelatedDocuments] = useState<RelatedDocument[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [processingStep, setProcessingStep] = useState<string>('');
   const [isPdfVisible, setIsPdfVisible] = useState<boolean>(true);
@@ -44,6 +55,7 @@ export const PDFProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         pdfKeyPoints,
         pdfSlides,
         generatedImages,
+        relatedDocuments,
         isLoading,
         processingStep,
         isPdfVisible,
@@ -53,6 +65,7 @@ export const PDFProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setPdfKeyPoints,
         setPdfSlides,
         setGeneratedImages,
+        setRelatedDocuments,
         setIsLoading,
         setProcessingStep,
         setIsPdfVisible

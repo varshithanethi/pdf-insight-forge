@@ -6,6 +6,7 @@ import { Upload, FileText } from 'lucide-react';
 import { usePDF } from '@/contexts/PDFContext';
 import { extractTextFromPdf } from '@/utils/pdfUtils';
 import { toast } from 'sonner';
+import { apiService } from '@/services/api';
 
 const PDFUploader: React.FC = () => {
   const { setPdfFile, setIsLoading, setProcessingStep, setPdfText } = usePDF();
@@ -57,8 +58,22 @@ const PDFUploader: React.FC = () => {
     setProcessingStep('Extracting text from PDF...');
 
     try {
-      const text = await extractTextFromPdf(file);
-      setPdfText(text);
+      // Use client-side extraction first for fast response
+      const clientText = await extractTextFromPdf(file);
+      setPdfText(clientText);
+      
+      // Then try to process on the backend for better results
+      try {
+        // This would be an actual backend call in production
+        const serverText = await apiService.processPdf(file);
+        if (serverText) {
+          setPdfText(serverText);
+        }
+      } catch (backendError) {
+        console.warn('Backend processing failed, using client-side extraction', backendError);
+        // We already set the text from client-side extraction, so we can continue
+      }
+      
       toast.success('PDF uploaded successfully');
     } catch (error) {
       console.error('Error processing PDF:', error);

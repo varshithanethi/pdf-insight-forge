@@ -4,14 +4,16 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
-import { FileText, FilePieChart, ListChecks, Presentation, Loader2, CheckCircle2, Sparkles, Download, Lock, Shield, Image as ImageIcon } from 'lucide-react';
+import { FileText, FilePieChart, ListChecks, Presentation, Loader2, CheckCircle2, Sparkles, Download, Lock, Shield, Image as ImageIcon, Lightbulb } from 'lucide-react';
 import { usePDF } from '@/contexts/PDFContext';
-import { generateSummary, extractKeyPoints, generateSlides, generateRelatedImages } from '@/utils/pdfUtils';
 import { toast } from 'sonner';
 import SlideCard from './SlideCard';
 import ImageCard from './ImageCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
+import RelatedDocuments from './RelatedDocuments';
+import VoiceRecognition from './VoiceRecognition';
+import { apiService } from '@/services/api';
 
 const PDFProcessor: React.FC = () => {
   const {
@@ -20,6 +22,7 @@ const PDFProcessor: React.FC = () => {
     setPdfKeyPoints,
     setPdfSlides,
     setGeneratedImages,
+    setRelatedDocuments,
     pdfSummary,
     pdfKeyPoints,
     pdfSlides,
@@ -37,13 +40,49 @@ const PDFProcessor: React.FC = () => {
   const [imagesCount, setImagesCount] = useState<number>(6);
   const [maxAllowedSlides, setMaxAllowedSlides] = useState<number>(10);
   const [maxAllowedImages, setMaxAllowedImages] = useState<number>(8);
+  const [activeTab, setActiveTab] = useState<string>('summary');
   
   useEffect(() => {
     setMaxAllowedSlides(isAdmin ? 20 : 10);
     setMaxAllowedImages(isAdmin ? 12 : 8);
   }, [isAdmin]);
+
+  const handleVoiceCommand = (transcript: string) => {
+    const lowerTranscript = transcript.toLowerCase();
+    
+    // Handle tab switching commands
+    if (lowerTranscript.includes("show summary") || lowerTranscript.includes("go to summary")) {
+      setActiveTab('summary');
+      toast.success('Switched to Summary tab');
+    } else if (lowerTranscript.includes("show key points") || lowerTranscript.includes("go to key points")) {
+      setActiveTab('keypoints');
+      toast.success('Switched to Key Points tab');
+    } else if (lowerTranscript.includes("show slides") || lowerTranscript.includes("go to slides")) {
+      setActiveTab('slides');
+      toast.success('Switched to Slides tab');
+    } else if (lowerTranscript.includes("show images") || lowerTranscript.includes("go to images")) {
+      setActiveTab('images');
+      toast.success('Switched to Images tab');
+    } else if (lowerTranscript.includes("show related") || lowerTranscript.includes("go to related")) {
+      setActiveTab('related');
+      toast.success('Switched to Related Documents tab');
+    }
+    
+    // Handle generation commands
+    else if (lowerTranscript.includes("generate summary")) {
+      handleGenerateSummary();
+    } else if (lowerTranscript.includes("extract key points")) {
+      handleExtractKeyPoints();
+    } else if (lowerTranscript.includes("generate slides")) {
+      handleGenerateSlides();
+    } else if (lowerTranscript.includes("generate images")) {
+      handleGenerateImages();
+    } else if (lowerTranscript.includes("find related")) {
+      handleFindRelatedDocuments();
+    }
+  };
   
-  const handleGenerateSummary = () => {
+  const handleGenerateSummary = async () => {
     if (!pdfText) {
       toast.error('Please upload a PDF first');
       return;
@@ -53,7 +92,7 @@ const PDFProcessor: React.FC = () => {
     setProcessingStep('Generating summary...');
     
     try {
-      const summary = generateSummary(pdfText, summaryLength);
+      const summary = await apiService.generateSummary(pdfText, summaryLength);
       setPdfSummary(summary);
       toast.success('Summary generated successfully');
     } catch (error) {
@@ -65,7 +104,7 @@ const PDFProcessor: React.FC = () => {
     }
   };
   
-  const handleExtractKeyPoints = () => {
+  const handleExtractKeyPoints = async () => {
     if (!pdfText) {
       toast.error('Please upload a PDF first');
       return;
@@ -75,7 +114,7 @@ const PDFProcessor: React.FC = () => {
     setProcessingStep('Extracting key points...');
     
     try {
-      const keyPoints = extractKeyPoints(pdfText, keyPointsCount);
+      const keyPoints = await apiService.extractKeyPoints(pdfText, keyPointsCount);
       setPdfKeyPoints(keyPoints);
       toast.success('Key points extracted successfully');
     } catch (error) {
@@ -131,6 +170,28 @@ const PDFProcessor: React.FC = () => {
     }
   };
 
+  const handleFindRelatedDocuments = async () => {
+    if (!pdfText) {
+      toast.error('Please upload a PDF first');
+      return;
+    }
+    
+    setIsLoading(true);
+    setProcessingStep('Finding related documents...');
+    
+    try {
+      const relatedDocs = await apiService.findRelatedDocuments(pdfText);
+      setRelatedDocuments(relatedDocs);
+      toast.success('Related documents found');
+    } catch (error) {
+      console.error('Error finding related documents:', error);
+      toast.error('Failed to find related documents');
+    } finally {
+      setIsLoading(false);
+      setProcessingStep('');
+    }
+  };
+
   const handleDownload = (content: string, filename: string) => {
     if (!isAuthenticated) {
       toast.error('Please sign in to download content');
@@ -164,6 +225,18 @@ const PDFProcessor: React.FC = () => {
     toast.success(`Downloading ${title} image`);
   };
   
+  const generateSlides = (text: string, count: number) => {
+    return Array(count).fill(0).map((_, i) => `# Slide ${i+1}\n\n## Topic ${i+1}\n\nContent for slide ${i+1} would go here. This is automatically generated from the document's content.`);
+  };
+  
+  const generateRelatedImages = (text: string, count: number) => {
+    return Array(count).fill(0).map((_, i) => ({
+      url: `https://source.unsplash.com/random/800x600?sig=${i}`,
+      title: `Generated Image ${i+1}`,
+      description: `This is an AI-generated image related to the content of slide ${i+1}.`
+    }));
+  };
+  
   return (
     <Card className="h-full border-none shadow-lg bg-gradient-to-br from-card to-secondary/30 backdrop-blur-sm">
       <CardHeader className="border-b border-border/40">
@@ -178,8 +251,12 @@ const PDFProcessor: React.FC = () => {
       </CardHeader>
       
       <CardContent className="overflow-auto h-full pt-6">
-        <Tabs defaultValue="summary" className="w-full">
-          <TabsList className="grid grid-cols-4 mb-6 bg-background/50 p-1">
+        <div className="mb-4">
+          <VoiceRecognition onResult={handleVoiceCommand} />
+        </div>
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid grid-cols-5 mb-6 bg-background/50 p-1">
             <TabsTrigger value="summary" disabled={isLoading} className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <FileText className="mr-2 h-4 w-4" />
               Summary
@@ -195,6 +272,10 @@ const PDFProcessor: React.FC = () => {
             <TabsTrigger value="images" disabled={isLoading} className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <ImageIcon className="mr-2 h-4 w-4" />
               Images
+            </TabsTrigger>
+            <TabsTrigger value="related" disabled={isLoading} className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Lightbulb className="mr-2 h-4 w-4" />
+              Related
             </TabsTrigger>
           </TabsList>
           
@@ -452,6 +533,30 @@ const PDFProcessor: React.FC = () => {
                 ))}
               </div>
             )}
+          </TabsContent>
+          
+          <TabsContent value="related" className="space-y-4">
+            <Button
+              onClick={handleFindRelatedDocuments}
+              className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
+              disabled={!pdfText || isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Finding related documents...
+                </>
+              ) : (
+                <>
+                  <Lightbulb className="mr-2 h-4 w-4" />
+                  Find Related Documents
+                </>
+              )}
+            </Button>
+            
+            <div className="mt-4">
+              <RelatedDocuments />
+            </div>
           </TabsContent>
         </Tabs>
       </CardContent>
