@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import RelatedDocuments from './RelatedDocuments';
 import VoiceRecognition from './VoiceRecognition';
 import { apiService } from '@/services/api';
+import { generateSlides, generateRelatedImages } from '@/utils/pdfUtils';
 
 const PDFProcessor: React.FC = () => {
   const {
@@ -50,7 +51,6 @@ const PDFProcessor: React.FC = () => {
   const handleVoiceCommand = (transcript: string) => {
     const lowerTranscript = transcript.toLowerCase();
     
-    // Handle tab switching commands
     if (lowerTranscript.includes("show summary") || lowerTranscript.includes("go to summary")) {
       setActiveTab('summary');
       toast.success('Switched to Summary tab');
@@ -68,7 +68,6 @@ const PDFProcessor: React.FC = () => {
       toast.success('Switched to Related Documents tab');
     }
     
-    // Handle generation commands
     else if (lowerTranscript.includes("generate summary")) {
       handleGenerateSummary();
     } else if (lowerTranscript.includes("extract key points")) {
@@ -320,7 +319,7 @@ const PDFProcessor: React.FC = () => {
               )}
             </Button>
             
-            {pdfSummary && (
+            {pdfSummary ? (
               <div className="mt-6 p-6 bg-secondary/50 backdrop-blur-sm rounded-md border border-border/50 animate-fade-in relative">
                 <div className="absolute right-2 top-2">
                   <Button 
@@ -334,9 +333,13 @@ const PDFProcessor: React.FC = () => {
                   </Button>
                 </div>
                 <h3 className="font-semibold mb-4 text-lg">Document Summary</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{pdfSummary}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {pdfSummary.trim() === "This is a server-generated summary of the PDF document..." ? 
+                    "No meaningful summary could be generated. Try adjusting the summary length or upload a different PDF document." : 
+                    pdfSummary}
+                </p>
               </div>
-            )}
+            ) : null}
           </TabsContent>
           
           <TabsContent value="keypoints" className="space-y-4">

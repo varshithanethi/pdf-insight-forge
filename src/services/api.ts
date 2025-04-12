@@ -1,5 +1,6 @@
 
 import { toast } from 'sonner';
+import { generateSummary as generatePdfSummary } from '@/utils/pdfUtils';
 
 // Mock API URLs - these would be replaced with real backend endpoints
 const API_BASE_URL = 'https://api.pdfinsightforge.com';
@@ -29,10 +30,13 @@ export const apiService = {
     try {
       console.log(`Generating summary of length ${length}`);
       
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Use the actual text to generate a real summary using the utility function
+      const summary = generatePdfSummary(pdfText, length);
       
-      return "This is a server-generated summary of the PDF document...";
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      return summary;
     } catch (error) {
       console.error('Error generating summary:', error);
       toast.error('Failed to generate summary on the server');
